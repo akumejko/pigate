@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Gate Status</title>
+</head>
+<body>
+    <div class="container">
+        <h1 id="status">Status: OK</h1>
+        <button onclick="openGate()">Open the gate</button>
+        <p id="feedback"></p>
+    </div>
+
+    <script>
+        // Predefined API key for testing
+        var apiKey = "your_api_key";
+
+        function openGate() {
+            // Display feedback
+            document.getElementById("feedback").innerHTML = "Gate is opening...";
+
+            // Make the API request with the predefined API key
+            fetch('/api/openGate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // If the API call is successful, display a success message
+                document.getElementById("feedback").innerHTML = "Gate opened successfully!";
+            })
+            .catch(error => {
+                // If there is an error, display the error message
+                document.getElementById("feedback").innerHTML = `Error: ${error.message}`;
+            })
+            .finally(() => {
+                // Clear the feedback after 10 seconds
+                setTimeout(function() {
+                    document.getElementById("feedback").innerHTML = "";
+                }, 10000);
+            });
+        }
+    </script>
+</body>
+</html>
