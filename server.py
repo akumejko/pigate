@@ -1,5 +1,9 @@
 import signal
 from flask import Flask, render_template, request, jsonify
+import RPi.GPIO as GPIO
+import time
+
+gateRelay = 11
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -15,20 +19,38 @@ def authenticate_api_key():
         return True
     return False
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+#@app.route('/')
+#def index():
+#    return render_template('index.html')
 
-@app.route('/api/openGate', methods=['POST'])
+@app.route('/webhook', methods=['POST'])    
+def handle_webhook():
+    reg = request.get_json(silent=True, force=True)
+    action = req.get('queryResult').get('action')
+    
+    if action == 'open the gate':
+        fulfillment_text = 'The gate is opening'
+    else:
+        fulfillment_text = action
+        
+    response = {'fulfillment_text':fulfillment_text}
+    
+    return jsonify(response)
+
+@app.route('/api/openGate', methods=['POST', 'GET'])
 def open_gate():
     # Check for API key authentication
     if not authenticate_api_key():
         return jsonify({"error": "Unauthorized"}), 401
 
-    # Your logic for opening the gate goes here
-    # For now, let's just print a message
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(gateRelay,GPIO.OUT)
+
+    GPIO.output(gateRelay,GPIO.LOW)
+    time.sleep(1)
     print("Gate opened!")
 
+    GPIO.cleanup();
     return jsonify({"status": "Gate opened!"})
 
 def handle_exit(signum, frame):
@@ -45,4 +67,4 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, handle_exit)
 
     # Start the Flask application
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
